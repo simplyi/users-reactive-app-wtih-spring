@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.reactive.ws.users.presentation;
 
+import com.appsdeveloperblog.reactive.ws.users.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,16 +15,19 @@ import java.util.UUID;
 @RequestMapping("/users") //   http://localhost:8080/users
 public class UserController {
 
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @PostMapping
     public Mono<ResponseEntity<UserRest>> createUser(@RequestBody @Valid Mono<CreateUserRequest> createUserRequest) {
-        return createUserRequest.map(request -> new UserRest(UUID.randomUUID(),
-                request.getFirstName(),
-                request.getLastName(),
-                request.getEmail())
-        ).map(userRest -> ResponseEntity
-                .status(HttpStatus.CREATED)
-                .location(URI.create("/users/" + userRest.getId()))
-                .body(userRest));
+        return userService.createUser(createUserRequest)
+                .map(userRest -> ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .location(URI.create("/users/" + userRest.getId()))
+                        .body(userRest));
     }
 
     @GetMapping("/{userId}")
@@ -37,8 +41,8 @@ public class UserController {
     }
 
     @GetMapping
-    public Flux<UserRest> getUsers(@RequestParam(value="offset", defaultValue="0") int offset,
-                                   @RequestParam(value="limit", defaultValue = "50") int limit) {
+    public Flux<UserRest> getUsers(@RequestParam(value = "offset", defaultValue = "0") int offset,
+                                   @RequestParam(value = "limit", defaultValue = "50") int limit) {
         return Flux.just(
                 new UserRest(UUID.randomUUID(), "Sergey", "Kargopolov", "test@test.com"),
                 new UserRest(UUID.randomUUID(), "Alice", "Smith", "alice@test.com"),
