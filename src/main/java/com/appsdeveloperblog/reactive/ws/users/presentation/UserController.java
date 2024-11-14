@@ -31,13 +31,10 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public Mono<UserRest> getUser(@PathVariable("userId") UUID userId) {
-        return Mono.just(new UserRest(
-                userId,
-                "Sergey",
-                "Kargopolov",
-                "test@test.com"
-        ));
+    public Mono<ResponseEntity<UserRest>> getUser(@PathVariable("userId") UUID userId) {
+        return userService.getUserById(userId)
+                .map(userRest -> ResponseEntity.status(HttpStatus.OK).body(userRest))
+                .switchIfEmpty(Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).build()));
     }
 
     @GetMapping
