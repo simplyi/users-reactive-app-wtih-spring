@@ -6,7 +6,6 @@ import com.appsdeveloperblog.reactive.ws.users.presentation.CreateUserRequest;
 import com.appsdeveloperblog.reactive.ws.users.presentation.UserRest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -33,14 +32,6 @@ public class UserServiceImpl implements UserService {
         return userRepository
                 .findById(id)
                 .mapNotNull(userEntity -> convertToRest(userEntity));
-    }
-
-    @Override
-    public Flux<UserRest> findAll(int offset, int limit) {
-        return userRepository.findAll()
-                .skip(offset)
-                .take(limit)
-                .map(userEntity->convertToRest(userEntity));
     }
 
     private UserEntity convertToEntity(CreateUserRequest createUserRequest) {
