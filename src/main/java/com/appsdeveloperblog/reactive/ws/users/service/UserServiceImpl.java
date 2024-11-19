@@ -5,7 +5,10 @@ import com.appsdeveloperblog.reactive.ws.users.data.UserRepository;
 import com.appsdeveloperblog.reactive.ws.users.presentation.CreateUserRequest;
 import com.appsdeveloperblog.reactive.ws.users.presentation.UserRest;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
@@ -32,6 +35,13 @@ public class UserServiceImpl implements UserService {
         return userRepository
                 .findById(id)
                 .mapNotNull(userEntity -> convertToRest(userEntity));
+    }
+
+    @Override
+    public Flux<UserRest> findAll(int page, int limit) {
+        Pageable pageable = PageRequest.of(page, limit);
+        return userRepository.findAllBy(pageable)
+                .map(userEntity->convertToRest(userEntity));
     }
 
     private UserEntity convertToEntity(CreateUserRequest createUserRequest) {
