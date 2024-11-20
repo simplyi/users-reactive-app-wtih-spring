@@ -7,7 +7,10 @@ import com.appsdeveloperblog.reactive.ws.users.presentation.UserRest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.yaml.snakeyaml.constructor.DuplicateKeyException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,7 +30,9 @@ public class UserServiceImpl implements UserService {
         return createUserRequestMono
                 .mapNotNull(this::convertToEntity)
                 .flatMap(userRepository::save)
-                .mapNotNull(this::convertToRest);
+                .mapNotNull(this::convertToRest)
+                .onErrorMap(DuplicateKeyException.class,
+                        exception->new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage()));
     }
 
     @Override
