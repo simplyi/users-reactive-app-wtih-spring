@@ -1,7 +1,7 @@
 package com.appsdeveloperblog.reactive.ws.users.service;
 
-import com.appsdeveloperblog.reactive.ws.users.presentation.CreateUserRequest;
-import com.appsdeveloperblog.reactive.ws.users.presentation.UserRest;
+import com.appsdeveloperblog.reactive.ws.users.presentation.model.CreateUserRequest;
+import com.appsdeveloperblog.reactive.ws.users.presentation.model.UserRest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
