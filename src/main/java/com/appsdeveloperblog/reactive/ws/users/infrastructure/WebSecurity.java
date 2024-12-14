@@ -23,7 +23,6 @@ public class WebSecurity {
     SecurityWebFilterChain httpSecurityFilterChain(ServerHttpSecurity http,
                                                    ReactiveAuthenticationManager authenticationManager,
                                                    JwtService jwtService) {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService);
         return http
                 .authorizeExchange(exchanges->exchanges
                         .pathMatchers(HttpMethod.POST, "/users").permitAll()
@@ -32,7 +31,7 @@ public class WebSecurity {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authenticationManager(authenticationManager)
-                .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAt(new JwtAuthenticationFilter(jwtService), SecurityWebFiltersOrder.AUTHENTICATION)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .build();
     }
