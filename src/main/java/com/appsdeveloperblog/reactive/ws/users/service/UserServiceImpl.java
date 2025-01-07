@@ -40,7 +40,8 @@ public class UserServiceImpl implements UserService {
         return createUserRequestMono
                 .flatMap(this::convertToEntity)
                 .flatMap(userRepository::save)
-                .mapNotNull(this::convertToRest);
+                .mapNotNull(this::convertToRest)
+                .doOnSuccess(savedUser -> usersSink.tryEmitNext(savedUser) );
     }
 
     @Override
@@ -60,7 +61,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Flux<UserRest> streamUser() {
-        return null;
+        return usersSink.asFlux();
     }
 
     private Mono<UserEntity> convertToEntity(CreateUserRequest createUserRequest) {
