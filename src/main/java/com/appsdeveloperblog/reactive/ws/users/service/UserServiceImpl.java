@@ -61,7 +61,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Flux<UserRest> streamUser() {
-        return usersSink.asFlux();
+        return usersSink.asFlux()
+                .publish()
+                .autoConnect(1);
     }
 
     private Mono<UserEntity> convertToEntity(CreateUserRequest createUserRequest) {
