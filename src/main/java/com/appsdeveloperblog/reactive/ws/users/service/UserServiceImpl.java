@@ -5,9 +5,12 @@ import com.appsdeveloperblog.reactive.ws.users.data.UserRepository;
 import com.appsdeveloperblog.reactive.ws.users.presentation.model.AlbumRest;
 import com.appsdeveloperblog.reactive.ws.users.presentation.model.CreateUserRequest;
 import com.appsdeveloperblog.reactive.ws.users.presentation.model.UserRest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +31,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final Sinks.Many<UserRest> usersSink;
     private final WebClient webClient;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public UserServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
@@ -113,11 +117,21 @@ public class UserServiceImpl implements UserService {
                         .build())
                 .header("Authorization",jwt)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, response-> {
+                    return Mono.error(new RuntimeException("Albums not found for user"));
+                })
+                .onStatus(HttpStatusCode::is5xxServerError, response->{
+                    return Mono.error(new RuntimeException("Server error while fetching albums"));
+                })
                 .bodyToFlux(AlbumRest.class)
                 .collectList()
                 .map(albums->{
                     user.setAlbums(albums);
                     return user;
+                })
+                .onErrorResume(e->{
+                    logger.error("Error fetching albums:", e);
+                    return Mono.just(user);
                 });
     }
 }
