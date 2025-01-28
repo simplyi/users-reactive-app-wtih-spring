@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
                 .uri(uriBuilder->uriBuilder
                         .port(8084)
                         .path("/albums")
-                        .queryParam("userId",user.getId())
+                        //.queryParam("userId",user.getId())
                         .build())
                 .header("Authorization",jwt)
                 .retrieve()
