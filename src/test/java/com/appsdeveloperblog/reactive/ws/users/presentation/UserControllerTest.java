@@ -4,15 +4,19 @@ import com.appsdeveloperblog.reactive.ws.users.presentation.model.CreateUserRequ
 import com.appsdeveloperblog.reactive.ws.users.presentation.model.UserRest;
 import com.appsdeveloperblog.reactive.ws.users.service.UserService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @WebFluxTest(UserController.class)
 public class UserControllerTest {
@@ -59,8 +63,9 @@ public class UserControllerTest {
                      assertEquals(expectedUserRest.getLastName(), response.getLastName());
                      assertEquals(expectedUserRest.getEmail(), response.getEmail());
                 });
-        
+
         // Assert
+       verify(userService,times(1)).createUser(Mockito.<Mono<CreateUserRequest>>any());
 
     }
 
