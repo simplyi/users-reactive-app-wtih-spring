@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @WebFluxTest(UserController.class)
-@Import(TestSecurityConfig.class)
+@Import({TestSecurityConfig.class})
 public class UserControllerTest {
 
     @MockitoBean
@@ -61,16 +62,89 @@ public class UserControllerTest {
                 .expectStatus().isCreated()
                 .expectHeader().location(expectedLocation)
                 .expectBody(UserRest.class)
-                .value((response)->{
-                     assertEquals(expectedUserRest.getId(), response.getId());
-                     assertEquals(expectedUserRest.getFirstName(), response.getFirstName());
-                     assertEquals(expectedUserRest.getLastName(), response.getLastName());
-                     assertEquals(expectedUserRest.getEmail(), response.getEmail());
+                .value((response) -> {
+                    assertEquals(expectedUserRest.getId(), response.getId());
+                    assertEquals(expectedUserRest.getFirstName(), response.getFirstName());
+                    assertEquals(expectedUserRest.getLastName(), response.getLastName());
+                    assertEquals(expectedUserRest.getEmail(), response.getEmail());
                 });
 
         // Assert
-       verify(userService,times(1)).createUser(Mockito.<Mono<CreateUserRequest>>any());
+        verify(userService, times(1)).createUser(Mockito.<Mono<CreateUserRequest>>any());
 
+    }
+
+
+    @Test
+    void testCreateUser_withInvalidRequest_returnsBadRequest() {
+        // Arrange
+        CreateUserRequest invalidRequest = new CreateUserRequest(
+                "Sergey",
+                "Kargopolov",
+                "test@test.com",
+                "123" // Short password
+        );
+
+        // Act & Assert
+        webTestClient
+                .post()
+                .uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidRequest)
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        verify(userService, never()).createUser(any());
+    }
+
+    @Test
+    void testCreateUser_withEmptyFirstName_returnsBadRequest() {
+        // Arrange
+        CreateUserRequest invalidRequest = new CreateUserRequest(
+                "", // Empty first name
+                "Kargopolov",
+                "user@example.com",
+                "123456789"
+        );
+
+        // Act & Assert
+        webTestClient
+                .post()
+                .uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(invalidRequest)
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        verify(userService, never()).createUser(any());
+    }
+
+    @Test
+    void testCreateUser_whenServiceThrowsException_returnsInternalServerErrorWithExpectedStructure() {
+        // Arrange
+        CreateUserRequest validRequest = new CreateUserRequest(
+                "Sergey",
+                "Kargopolov",
+                "user@example.com",
+                "123456789"
+        );
+
+        when(userService.createUser(any())).thenReturn(Mono.error(new RuntimeException("Service error")));
+
+        // Act & Assert
+        webTestClient
+                .post()
+                .uri("/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(validRequest)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+                .expectBody()
+                .jsonPath("$.instance").isEqualTo("/users")
+                .jsonPath("$.status").isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .jsonPath("$.detail").isEqualTo("Service error");
+
+        verify(userService, times(1)).createUser(any());
     }
 
 }
