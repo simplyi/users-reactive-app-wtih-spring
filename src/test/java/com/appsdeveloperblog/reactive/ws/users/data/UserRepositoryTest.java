@@ -1,6 +1,9 @@
 package com.appsdeveloperblog.reactive.ws.users.data;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -8,8 +11,6 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DataR2dbcTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -69,6 +70,17 @@ class UserRepositoryTest {
         // Act and Assert
         StepVerifier.create(userRepository.findByEmail(emailToFind))
                 .expectNextMatches(user->user.getEmail().equals(emailToFind))
+                .verifyComplete();
+    }
+
+    @Test
+    void testFindByEmail_WithEmailThatDoesNotExist_ReturnsEmptyMono() {
+        // Arrange
+        String nonExistentEmail = "nonexistent@example.com";
+
+        // Act & Assert
+        StepVerifier.create(userRepository.findByEmail(nonExistentEmail))
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }
