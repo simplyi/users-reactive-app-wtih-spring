@@ -18,6 +18,9 @@ class UserRepositoryTest {
     @Autowired
     private DatabaseClient databaseClient;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @BeforeAll
     void setUp() {
         UserEntity user1 = new UserEntity(UUID.randomUUID(),
@@ -59,6 +62,13 @@ class UserRepositoryTest {
     }
 
     @Test
-    void findByEmail() {
+    void testFindByEmail_WithEmailThatExists_ReturnsMatchingUser() {
+        // Arrange
+        String emailToFind = "john.doe@example.com";
+
+        // Act and Assert
+        StepVerifier.create(userRepository.findByEmail(emailToFind))
+                .expectNextMatches(user->user.getEmail().equals(emailToFind))
+                .verifyComplete();
     }
 }
