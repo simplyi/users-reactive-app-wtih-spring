@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -106,6 +107,16 @@ class UserRepositoryTest {
         StepVerifier.create(userRepository.findAllBy(pageable))
                 .expectNextCount(0) // Expect no items on the second page
                 .expectComplete()
+                .verify();
+    }
+
+    @Test
+    void testSave_whenExistingEmailProvided_shouldFail() {
+        UserEntity invalidUser = new UserEntity(null, "Sergey", "Kargopolov", "jane.doe@example.com", "password");
+
+        userRepository.save(invalidUser)
+                .as(StepVerifier::create)
+                .expectError(DataIntegrityViolationException.class)
                 .verify();
     }
 }
